@@ -3,29 +3,23 @@ import torch.nn as nn
 from typing import Optional
 
 from .encoders import ImageEncoder, TextEncoder
-from .concepts_book import BagOfConcepts
-from .concept_encoder import MultiHeadAttention
+from .bag_of_concepts import BagOfConcepts
+from .transformer_blocks import MultiHeadAttention
+from ...configs.concept_mapper_config import ConceptMapperConfig
 
 class MultimodalConceptMapper(nn.Module):
-    def __init__(
-        self,
-        image_model_name: str = "openai/clip-vit-base-patch32",
-        text_model_name: str = "distilroberta-base",
-        target_hidden_size: int = 512,
-        num_concepts: int = 512,
-        concept_dim: int = 512,
-        num_attention_heads: int = 4
-    ):
+    def __init__(self, config: ConceptMapperConfig):
         super().__init__()
 
-        self.image_encoder = ImageEncoder(model_name=image_model_name, target_hidden_size=target_hidden_size)
-        self.text_encoder = TextEncoder(model_name=text_model_name, target_hidden_size=target_hidden_size)
-        self.bag_of_concepts = BagOfConcepts(num_concepts=num_concepts, concept_dim=concept_dim)
+        self.image_encoder = ImageEncoder(config=config.image_encoder_config)
+        self.text_encoder = TextEncoder(config=config.text_encoder_config)
+        self.bag_of_concepts = BagOfConcepts(config=config.bag_of_concepts_config)
 
         self.multi_head_attention = MultiHeadAttention(
-            query_dim=concept_dim,
-            kv_dim=target_hidden_size,
-            n_head=num_attention_heads
+            query_dim=config.bag_of_concepts_config.concept_dim,
+            kv_dim=config.image_encoder_config.target_hidden_size,
+            n_head=config.num_attention_heads,
+            dropout_rate=config.multi_head_attention_dropout_rate
         )
 
     def forward(self, images: torch.Tensor, texts: list[str], concept_ids: torch.Tensor) -> torch.Tensor:
