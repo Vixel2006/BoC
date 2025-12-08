@@ -5,13 +5,22 @@ from ...configs.bag_of_concepts_config import BagOfConceptsConfig
 class BagOfConcepts(nn.Module):
     def __init__(self, config: BagOfConceptsConfig = BagOfConceptsConfig()):
         super().__init__()
-        # NOTE: Here I think we need to choose the num_concepts, concept carefully, like if we're training on FashionMnist with 10 labels,
-        # maybe num_concepts=10 will yeld the best results as it will force the model to only have 10 concept vectors each one for a different labels
-        # in which it can reconstruct the label or image from it. but this maybe will lead to overfitting, so we need to find a good balance of this
+        self.config = config
+        self.commitment = config.commitment
         self.concepts = nn.Embedding(config.num_concepts, config.concept_dim)
+        self.concepts.weight.data.uniform_(-1/self.num_concepts, 1/self.num_concepts)
 
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
         # NOTE: Here we should be aware that this concept bag can take any form of modality as input
-        concept = self.concepts(inp)
+        flat_concept = inp.reshape(-1, self.config.concept_dim)
+
+        distances = torch.cdist(flat_concept, self.concepts.weight)
+
+        encoding_indices = torch.argmin(distances, dim=1).unsqueeze(1)
+
+        quantized_flat = torch.index_select(self.concepts.weight, 0, encoding_indices.view(-1))
+
+        quantized = quantized_flat.view_as(inputs)
+
         return concept
 
