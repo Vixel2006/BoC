@@ -1,146 +1,82 @@
 import matplotlib.pyplot as plt
-import os
+import numpy as np
+import torch
 
-def plot_losses_vs_epochs(losses: dict, save_path: str = None):
-    plt.figure(figsize=(10, 6))
-    for loss_name, loss_values in losses.items():
-        plt.plot(loss_values, label=loss_name)
-
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.title("Loss vs. Epochs")
-    plt.legend()
-    plt.grid(True)
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path)
-        plt.close()
-        print(f"Loss vs. Epochs plot saved to {save_path}")
-    else:
-        plt.show()
-
-def plot_loss_vs_concept_dimensions(concept_dims_losses: list, save_path: str = None):
-    if not concept_dims_losses:
-        print("No data to plot for Loss vs. Concept Dimensions.")
-        return
-
-    concept_dims = [item[0] for item in concept_dims_losses]
-    losses = [item[1] for item in concept_dims_losses]
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(concept_dims, losses, marker='o', linestyle='-')
-
-    plt.xlabel("Concept Vector Dimension")
-    plt.ylabel("Loss")
-    plt.title("Loss vs. Concept Vector Dimensions")
-    plt.grid(True)
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path)
-        plt.close()
-        print(f"Loss vs. Concept Dimensions plot saved to {save_path}")
-    else:
-        plt.show()
-
-def plot_concept_sparsity(sparsity_data: dict, save_path: str = None):
-    if not sparsity_data:
-        print("No data to plot for Concept Sparsity.")
-        return
-
-    concept_ids = list(sparsity_data.keys())
-    sparsity_scores = list(sparsity_data.values())
-
-    plt.figure(figsize=(12, 6))
-    plt.bar(concept_ids, sparsity_scores, color='skyblue')
-    plt.xlabel("Concept ID")
-    plt.ylabel("Sparsity Score")
-    plt.title("Concept Sparsity Distribution")
-    plt.xticks(rotation=90, fontsize=8)
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.tight_layout()
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path)
-        plt.close()
-        print(f"Concept Sparsity plot saved to {save_path}")
-    else:
-        plt.show()
-
-def plot_cross_modal_similarity(similarity_matrix, labels: tuple, save_path: str = None):
-    if similarity_matrix is None or not labels:
-        print("No data or labels to plot for Cross-Modal Similarity.")
-        return
-
-    row_labels, col_labels = labels
+def plot_concept_alignment(img_indices, txt_indices, batch_idx=0):
+    # Take the first example in the batch
+    img_codes = img_indices[batch_idx].cpu().numpy() # e.g., [5, 42, 12, 5, 0]
+    txt_codes = txt_indices[batch_idx].cpu().numpy() # e.g., [42, 5, 9, 0, 0]
     
-    plt.figure(figsize=(len(col_labels) * 0.8, len(row_labels) * 0.8)) # Adjust figure size dynamically
-    plt.imshow(similarity_matrix, cmap='viridis', aspect='auto')
-    plt.colorbar(label="Similarity Score")
-    plt.xticks(range(len(col_labels)), col_labels, rotation=90, fontsize=8)
-    plt.yticks(range(len(row_labels)), row_labels, fontsize=8)
-    plt.xlabel("Text Embeddings" if col_labels and "text" in col_labels[0].lower() else "Column Labels")
-    plt.ylabel("Image Embeddings" if row_labels and "image" in row_labels[0].lower() else "Row Labels")
-    plt.title("Cross-Modal Similarity Matrix")
-    plt.tight_layout()
+    # Create a correlation matrix
+    # Rows = Image Slots, Cols = Text Slots
+    # We will fill it with the Concept ID if they match, else -1
+    n_img = len(img_codes)
+    n_txt = len(txt_codes)
+    matrix = np.full((n_img, n_txt), -1)
+    
+    for i in range(n_img):
+        for j in range(n_txt):
+            if img_codes[i] == txt_codes[j]:
+                matrix[i, j] = img_codes[i] # Store the Concept ID (e.g., 42)
 
-    if save_path:
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path)
-        plt.close()
-        print(f"Cross-Modal Similarity plot saved to {save_path}")
-    else:
-        plt.show()
+    # Plot
+    fig, ax = plt.subplots()
+    # Use a discrete colormap (like 'tab20') so every concept ID has a distinct color
+    cmap = plt.get_cmap('tab20') 
+    
+    # We use a masked array to hide non-matches (make them white/black)
+    masked_matrix = np.ma.masked_where(matrix == -1, matrix)
+    
+    im = ax.imshow(masked_matrix, cmap=cmap, vmin=0, vmax=64) # Assuming 64 concepts
+    
+    # Labels
+    ax.set_ylabel("Image Slots")
+    ax.set_xlabel("Text Slots")
+    ax.set_title(f"Concept Alignment (Sample {batch_idx})")
+    
+    # Annotate the grid with the actual Concept IDs
+    for i in range(n_img):
+        for j in range(n_txt):
+            val = matrix[i, j]
+            if val != -1:
+                text = ax.text(j, i, str(val),
+                               ha="center", va="center", color="black", weight="bold")
+                
+    return fig
 
-def plot_retrieval_metrics(metrics_data: dict, save_path: str = None):
-    if not metrics_data:
-        print("No data to plot for Retrieval Metrics.")
-        return
+def plot_attention_map(attention_weights, x_labels=None, y_labels=None, title="Attention Map"):
+    if isinstance(attention_weights, torch.Tensor):
+        attention_weights = attention_weights.detach().cpu().numpy()
 
-    metric_names = list(metrics_data.keys())
-    metric_values = list(metrics_data.values())
+    fig, ax = plt.subplots(figsize=(8, 7))
+    im = ax.imshow(attention_weights, cmap='viridis', origin='upper')
 
-    plt.figure(figsize=(10, 6))
-    plt.bar(metric_names, metric_values, color='lightcoral')
-    plt.xlabel("Metric")
-    plt.ylabel("Score")
-    plt.title("Retrieval Metrics")
-    plt.ylim(0, 1.0) # Assuming scores are between 0 and 1
-    plt.xticks(rotation=45, ha='right')
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.tight_layout()
+    # We want to show all ticks...
+    ax.set_xticks(np.arange(attention_weights.shape[1]))
+    ax.set_yticks(np.arange(attention_weights.shape[0]))
+    # ... and label them with the respective list entries.
+    if x_labels is not None:
+        ax.set_xticklabels(x_labels)
+    if y_labels is not None:
+        ax.set_yticklabels(y_labels)
 
-    if save_path:
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path)
-        plt.close()
-        print(f"Retrieval Metrics plot saved to {save_path}")
-    else:
-        plt.show()
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
 
-def plot_generative_metrics(metrics_data: dict, save_path: str = None):
-    if not metrics_data:
-        print("No data to plot for Generative Metrics.")
-        return
+    ax.set_title(title)
+    fig.tight_layout()
+    return fig
 
-    metric_names = list(metrics_data.keys())
-    metric_values = list(metrics_data.values())
-
-    plt.figure(figsize=(10, 6))
-    plt.bar(metric_names, metric_values, color='lightgreen')
-    plt.xlabel("Metric")
-    plt.ylabel("Score")
-    plt.title("Generative Metrics")
-    plt.xticks(rotation=45, ha='right')
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.tight_layout()
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path)
-        plt.close()
-        print(f"Generative Metrics plot saved to {save_path}")
-    else:
-        plt.show()
+def plot_metric_per_epoch(scores, metric_name, title="Metric per Epoch"):
+    epochs = range(1, len(scores) + 1)
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(epochs, scores, marker='o', linestyle='-')
+    
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel(metric_name)
+    ax.set_title(title)
+    ax.grid(True)
+    
+    return fig
