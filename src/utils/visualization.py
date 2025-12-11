@@ -80,3 +80,4 @@ def plot_metric_per_epoch(scores, metric_name, title="Metric per Epoch"):
     ax.grid(True)
     
     return fig
+

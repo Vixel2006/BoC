@@ -8,7 +8,7 @@ from .transformer_blocks import SlotAttention
 from ...configs.concept_mapper_config import ConceptMapperConfig
 
 
-class ConceptMapper(nn.Module):
+class ConceptEncoder(nn.Module):
     def __init__(self, config: ConceptMapperConfig):
         super().__init__()
         self.modality = config.modality
@@ -21,7 +21,6 @@ class ConceptMapper(nn.Module):
         # NOTE: maybe if we found some problems in the text mapping we can add a standard attention
         # and use it for the text encoded tensors.
         self.slot_attn = SlotAttention(config.slot_dim, config.num_iter, config.num_slots)
-
 
     def forward(self, images: torch.Tensor = None, text: list[str] = None) -> torch.Tensor:
         # Make sure that the mapper gets the right input modality
