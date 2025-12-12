@@ -236,5 +236,3 @@ def main(config: TrainingConfig):
     metrics = train(optimizer, dataloader, config, output_dir)
     return metrics
 
-
-

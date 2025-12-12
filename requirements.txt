@@ -13,3 +13,4 @@ pycocotools
 PyYAML
 bert-score
 tqdm
+datasets

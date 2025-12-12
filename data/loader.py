@@ -7,7 +7,7 @@ from typing import Callable
 
 def flickr30k_loader(
     root: str = "/flickr30k",
-    ann_file: str = "/flickr30k/annotations",
+    split: str = "train", # Added split argument
     transforms: Callable = None,
     batch_size: int = 32,
     shuffle: bool = True,
@@ -15,6 +15,7 @@ def flickr30k_loader(
     pin_memory: bool = False,
     drop_last: bool = False,
 ):
+    ann_file = os.path.join(root, "annotations", f"captions_{split}.txt") # Dynamically construct ann_file
     dataset = Flickr30k(root=root, ann_file=ann_file, transform=transforms)
     loader = DataLoader(
         dataset,
