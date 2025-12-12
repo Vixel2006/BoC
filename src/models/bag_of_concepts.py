@@ -5,6 +5,9 @@ from configs.bag_of_concepts_config import BagOfConceptsConfig
 class BagOfConcepts(nn.Module):
     def __init__(self, config: BagOfConceptsConfig = BagOfConceptsConfig()):
         super().__init__()
+        self.num_concepts = config.num_concepts
+        self.concept_dim = config.concept_dim
+
         self.config = config
         self.commitment = config.commitment
         self.concepts = nn.Embedding(config.num_concepts, config.concept_dim)

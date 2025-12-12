@@ -11,9 +11,9 @@ class SlotAttention(nn.Module):
         self.num_iter = num_iter
         self.num_slots = num_slots
 
-        self.norm1 = nn.LayerNorm()
-        self.norm2 = nn.LayerNorm()
-        self.norm3 = nn.LayerNorm()
+        self.norm1 = nn.LayerNorm(slot_dim)
+        self.norm2 = nn.LayerNorm(slot_dim)
+        self.norm3 = nn.LayerNorm(slot_dim)
 
         # Defining the mu, sigma parameters for initializing the slots from
         self.slot_mu = nn.Parameter(torch.randn(1, 1, slot_dim))
