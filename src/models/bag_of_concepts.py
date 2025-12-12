@@ -27,5 +27,5 @@ class BagOfConcepts(nn.Module):
         # This is equavelent to saying that dL/d(concepts) = dL/d(inputs)
         concepts = inputs + (concepts - inputs).detach()
 
-        return concept
+        return concepts, encoding_indices
 

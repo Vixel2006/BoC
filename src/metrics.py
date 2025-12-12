@@ -10,39 +10,6 @@ def gaussian_kernel(x, y, gamma=1.0):
     dist_sq = torch.cdist(x, y, p=2).pow(2)
     return torch.exp(-gamma * dist_sq)
 
-class CLIPScore(nn.Module):
-    def __init__(self, model_name="openai/clip-vit-base-patch32", device=None):
-        super().__init__()
-        self.model = CLIPModel.from_pretrained(model_name)
-        self.processor = CLIPProcessor.from_pretrained(model_name)
-        self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(self.device)
-        self.model.eval() # Set model to evaluation mode
-
-    def forward(self, images, texts):
-        if not (isinstance(images, list) and all(isinstance(img, Image.Image) for img in images)):
-            raise ValueError("Images must be a list of PIL.Image.Image objects.")
-        if not isinstance(texts, list):
-            raise ValueError("Texts must be a list of strings.")
-
-        inputs = self.processor(text=texts, images=images, return_tensors="pt", padding=True)
-        inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-            image_features = outputs.image_embeds
-            text_features = outputs.text_embeds
-
-        # Normalize features
-        image_features = F.normalize(image_features, p=2, dim=-1)
-        text_features = F.normalize(text_features, p=2, dim=-1)
-
-        # Calculate cosine similarity
-        # Assuming images[i] corresponds to texts[i]
-        clip_scores = (image_features * text_features).sum(dim=-1)
-        return clip_scores
-
-
 class CLIPMMD(nn.Module):
     def __init__(self, model_name="openai/clip-vit-base-patch32", kernel_gamma=1.0, device=None):
         super().__init__()

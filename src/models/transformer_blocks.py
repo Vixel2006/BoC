@@ -67,5 +67,5 @@ class SlotAttention(nn.Module):
 
             slots = self.gru_cell(slots_prev, updates)
 
-        return slots
+        return slots, attn
 

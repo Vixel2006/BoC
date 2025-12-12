@@ -5,6 +5,7 @@ from .bag_of_concepts_config import BagOfConceptsConfig
 
 @dataclass
 class ConceptMapperConfig:
+    modality: str
     image_encoder_config: ImageEncoderConfig = ImageEncoderConfig()
     text_encoder_config: TextEncoderConfig = TextEncoderConfig()
     bag_of_concepts_config: BagOfConceptsConfig = BagOfConceptsConfig()

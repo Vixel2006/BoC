@@ -32,7 +32,7 @@ class ConceptEncoder(nn.Module):
         if self.modality == "text":
             features = self.encoder(text)
 
-        concept_slots = self.slot_attn(features)
+        concept_slots, attn = self.slot_attn(features)
 
-        return concept_slots
+        return concept_slots, attn
 

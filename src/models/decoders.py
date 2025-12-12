@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Tuple, Optional, List
 from .transformer_blocks import *
-from ...configs.captioning_config import CaptioningConfig
-from ...configs.concept_to_image_vae_config import ConceptToImageVAEConfig
+from ...configs.image_decoder_config import ImageDecoderConfig
+from ...configs.text_decoder_config import TextDecoderConfig
 import math
 
 class SlotImageDecoder(nn.Module):
@@ -102,7 +102,7 @@ class SlotTextDecoderGRU(nn.Module):
         else:
             # Inference mode: generate sequence token by token
             # Start with a special <SOS> token (assuming token 0 is <SOS>)
-            input_token = torch.zeros((batch_size, 1), dtype=torch.long, device=concepts.device)
+            input_token = torch.zeros((B, 1), dtype=torch.long, device=concepts.device) # Use B for batch_size
             
             outputs = []
             hidden = h_0

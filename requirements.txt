@@ -11,3 +11,5 @@ torchvision
 nltk
 pycocotools
 PyYAML
+bert-score
+tqdm
