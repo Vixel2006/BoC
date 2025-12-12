@@ -10,12 +10,19 @@ from transformers import AutoTokenizer
 from tqdm.auto import tqdm
 import os
 import matplotlib.pyplot as plt
+import torch.optim as optim
 
 from ..configs.training_config import TrainingConfig
+from ..configs.bag_of_concepts_config import BagOfConceptsConfig
+from ..configs.concept_mapper_config import ConceptMapperConfig
+from ..configs.image_decoder_config import ImageDecoderConfig
+from ..configs.text_decoder_config import TextDecoderConfig
+
 from .models.concept_encoder import ConceptEncoder
 from .models.bag_of_concepts import BagOfConcepts
 from .models.decoders import SlotImageDecoder, SlotTextDecoderGRU
 from .utils.visualization import plot_concept_alignment, plot_attention_map, plot_metric_per_epoch
+from data.loader import flickr30k_loader
 
 def train(optimizer, dataloader, config: TrainingConfig, output_dir: str):
     # Instantiate models
@@ -57,6 +64,10 @@ def train(optimizer, dataloader, config: TrainingConfig, output_dir: str):
             # NOTE: The loss function used consists of three parts
             # 1. We have alignment_loss, that align each encoder output to a concept and try to align both modalities concepts
             # 2. We have a reconstruction loss for each modality to make sure that we can get the modality back out of its corresponding concept
+            # The 'slots' variable is the codebook/centroids for vector quantization.
+            # It should ideally be part of the BagOfConcepts model's state.
+            # For now, we'll use a random tensor as a placeholder if boc.slots is not available.
+            slots = boc.slots if hasattr(boc, 'slots') else torch.randn(config.bag_of_concepts.num_concepts, config.bag_of_concepts.concept_dim).to(config.device)
             alignment_loss = vq_loss(txt_concept, slots, config.bag_of_concepts.commitment) + vq_loss(img_concept, slots, config.bag_of_concepts.commitment) + F.mse_loss(img_concept, txt_concept)
 
             txt_recon_loss = text_reconstruction_loss(gen_txt, txts)
@@ -169,36 +180,61 @@ def train(optimizer, dataloader, config: TrainingConfig, output_dir: str):
         clip_mmd_fig.savefig(os.path.join(output_dir, "clip_mmd_per_epoch.png"))
         plt.close(clip_mmd_fig)
 
-@hydra.main(config_path="../configs", config_name="training_config", version_base=None)
-def main_hydra(cfg: DictConfig):
+    # Return collected metrics
+    return {
+        "total_loss_per_epoch": total_loss_per_epoch,
+        "alignment_loss_per_epoch": alignment_loss_per_epoch,
+        "txt_recon_loss_per_epoch": txt_recon_loss_per_epoch,
+        "img_recon_loss_per_epoch": img_recon_loss_per_epoch,
+        "bertscore_f1_per_epoch": bertscore_f1_per_epoch,
+        "clip_mmd_per_epoch": clip_mmd_per_epoch,
+    }
+
+def main(config: TrainingConfig):
     # Instantiate models
-    txt_concept_encoder = instantiate(cfg.concept_mapper_text).to(cfg.device)
-    img_concept_encoder = instantiate(cfg.concept_mapper_image).to(cfg.device)
-    boc = instantiate(cfg.bag_of_concepts).to(cfg.device)
-    img_decoder = instantiate(cfg.image_decoder).to(cfg.device)
-    txt_decoder = instantiate(cfg.text_decoder).to(cfg.device)
+    txt_concept_encoder = ConceptEncoder(config.concept_mapper_text).to(config.device)
+    img_concept_encoder = ConceptEncoder(config.concept_mapper_image).to(config.device)
+    boc = BagOfConcepts(config.bag_of_concepts).to(config.device)
+    img_decoder = SlotImageDecoder(config.image_decoder).to(config.device)
+    txt_decoder = SlotTextDecoderGRU(config.text_decoder).to(config.device)
 
-    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    clip_mmd_calculator = CLIPMMD(device=cfg.device)
+    # Instantiate optimizer
+    # Assuming Adam optimizer with a default learning rate if not specified in config
+    optimizer = optim.Adam(
+        [
+            *txt_concept_encoder.parameters(),
+            *img_concept_encoder.parameters(),
+            *boc.parameters(),
+            *img_decoder.parameters(),
+            *txt_decoder.parameters(),
+        ],
+        lr=1e-3 # Default learning rate
+    )
 
-    # Instantiate optimizer (assuming it's defined in the config)
-    optimizer = instantiate(cfg.optimizer, params=[
-        *txt_concept_encoder.parameters(),
-        *img_concept_encoder.parameters(),
-        *boc.parameters(),
-        *img_decoder.parameters(),
-        *txt_decoder.parameters(),
+    # Instantiate dataloader
+    # Assuming default transforms for now, as they are not in TrainingConfig
+    transform = transforms.Compose([
+        transforms.Resize((config.image_decoder.image_size, config.image_decoder.image_size)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
     ])
+    dataloader = flickr30k_loader(
+        root="./data", # Assuming data is in a 'data' folder relative to project root
+        ann_file="./data/flickr30k/annotations", # Adjust path as needed
+        transforms=transform,
+        batch_size=32, # Assuming a default batch size for now
+        shuffle=True,
+        num_workers=0, # For simplicity, can be increased
+        pin_memory=True if config.device == "cuda" else False,
+    )
 
-    # Instantiate dataloader (assuming it's defined in the config)
-    dataloader = instantiate(cfg.dataloader)
-
-    # Create a dummy output directory for now
-    import os
+    # Create output directory
     output_dir = "output_plots"
     os.makedirs(output_dir, exist_ok=True)
 
-    train(optimizer, dataloader, cfg, output_dir)
+    # Run the training loop
+    metrics = train(optimizer, dataloader, config, output_dir)
+    return metrics
 
 
 
