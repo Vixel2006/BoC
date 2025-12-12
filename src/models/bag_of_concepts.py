@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from ...configs.bag_of_concepts_config import BagOfConceptsConfig
+from configs.bag_of_concepts_config import BagOfConceptsConfig
 
 class BagOfConcepts(nn.Module):
     def __init__(self, config: BagOfConceptsConfig = BagOfConceptsConfig()):

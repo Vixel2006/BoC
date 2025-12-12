@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from transformers import AutoTokenizer, RobertaModel, CLIPVisionModel
-from ...configs.image_encoder_config import ImageEncoderConfig
-from ...configs.text_encoder_config import TextEncoderConfig
+from configs.image_encoder_config import ImageEncoderConfig
+from configs.text_encoder_config import TextEncoderConfig
 
 class ImageEncoder(nn.Module):
     def __init__(self, config: ImageEncoderConfig = ImageEncoderConfig()):

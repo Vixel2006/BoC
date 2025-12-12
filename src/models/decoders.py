@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Tuple, Optional, List
 from .transformer_blocks import *
-from ...configs.image_decoder_config import ImageDecoderConfig
-from ...configs.text_decoder_config import TextDecoderConfig
+from configs.image_decoder_config import ImageDecoderConfig
+from configs.text_decoder_config import TextDecoderConfig
 import math
 
 class SlotImageDecoder(nn.Module):

@@ -5,7 +5,7 @@ from typing import Optional
 from .encoders import ImageEncoder, TextEncoder
 from .bag_of_concepts import BagOfConcepts
 from .transformer_blocks import SlotAttention
-from ...configs.concept_mapper_config import ConceptMapperConfig
+from configs.concept_mapper_config import ConceptMapperConfig
 
 
 class ConceptEncoder(nn.Module):

@@ -12,11 +12,11 @@ import os
 import matplotlib.pyplot as plt
 import torch.optim as optim
 
-from ..configs.training_config import TrainingConfig
-from ..configs.bag_of_concepts_config import BagOfConceptsConfig
-from ..configs.concept_mapper_config import ConceptMapperConfig
-from ..configs.image_decoder_config import ImageDecoderConfig
-from ..configs.text_decoder_config import TextDecoderConfig
+from configs.training_config import TrainingConfig
+from configs.bag_of_concepts_config import BagOfConceptsConfig
+from configs.concept_mapper_config import ConceptMapperConfig
+from configs.image_decoder_config import ImageDecoderConfig
+from configs.text_decoder_config import TextDecoderConfig
 
 from .models.concept_encoder import ConceptEncoder
 from .models.bag_of_concepts import BagOfConcepts
