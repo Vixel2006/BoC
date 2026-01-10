@@ -1,16 +1,18 @@
-torch
+jax[cuda13]
+jaxlib
+flax
+optax
 transformers
-Pillow
-opencv-python
-tensorboard
+pillow
 matplotlib
-seaborn
+numpy
 pandas
 scikit-learn
-torchvision
-nltk
-pycocotools
-PyYAML
-bert-score
 tqdm
-datasets
+
+# For tokenization (optional - using simple tokenizer by default)
+# sentencepiece
+
+# For experiment tracking (optional)
+# wandb
+# tensorboard
