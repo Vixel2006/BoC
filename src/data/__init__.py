@@ -7,6 +7,7 @@ from .datasets import (
     SimpleTokenizer,
     create_dataloader,
     build_tokenizer_from_dataset,
+    verify_dataset,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     'SimpleTokenizer',
     'create_dataloader',
     'build_tokenizer_from_dataset',
+    'verify_dataset',
 ]

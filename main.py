@@ -41,6 +41,7 @@ from src.data import (
     create_dataloader,
     build_tokenizer_from_dataset,
     SimpleTokenizer,
+    verify_dataset,
 )
 from src.utils import (
     load_image,

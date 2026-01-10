@@ -18,6 +18,8 @@ import json
 from pathlib import Path
 from tqdm import tqdm
 import shutil
+from src.data import verify_dataset
+
 
 
 class DownloadProgressBar(tqdm):
@@ -220,23 +222,7 @@ def setup_coco(output_dir: Path):
         return False
 
 
-def verify_dataset(dataset_name: str, data_root: Path) -> bool:
-    """Verify dataset is properly set up."""
-    if dataset_name == 'flickr30k':
-        required_paths = [
-            data_root / 'flickr30k' / 'flickr30k_images',
-            data_root / 'flickr30k' / 'flickr30k_annotations' / 'train.json',
-        ]
-    elif dataset_name == 'coco':
-        required_paths = [
-            data_root / 'coco' / 'train2017',
-            data_root / 'coco' / 'val2017',
-            data_root / 'coco' / 'annotations' / 'captions_train2017.json',
-        ]
-    else:
-        return False
-    
-    return all(p.exists() for p in required_paths)
+
 
 
 def main():
