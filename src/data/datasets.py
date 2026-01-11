@@ -298,7 +298,7 @@ def build_tokenizer_from_dataset(config: DataConfig) -> SimpleTokenizer:
     else:
         raise ValueError(f"Unknown dataset: {config.dataset_name}")
     
-    captions = [dataset[i]['caption'] for i in range(len(dataset))]
+    captions = [sample['caption'] for sample in dataset.samples]
     
     # Build tokenizer
     tokenizer = SimpleTokenizer(vocab_size=config.vocab_size)
