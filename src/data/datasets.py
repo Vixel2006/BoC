@@ -87,6 +87,12 @@ class Flickr30kDataset:
             if not captions:
                 continue
                 
+            # Optional: Check if image exists to prevent FileNotFoundError during training
+            # Only add to samples if image is found
+            if not image_path.exists():
+                # We don't print for every missing image to avoid flooding logs
+                continue
+
             for caption in captions:
                 self.samples.append({
                     'image_path': str(image_path),

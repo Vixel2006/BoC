@@ -111,7 +111,22 @@ def setup_flickr30k(output_dir: Path):
     print("\nDownloading Flickr30k annotations...")
     for split, url in flickr_ann_urls.items():
         ann_file = annotations_dir / f"{split}.json"
-        if not ann_file.exists():
+        
+        # Check if we should download:
+        # 1. File doesn't exist
+        # 2. File is a "template" (too small or has example.jpg)
+        should_download = not ann_file.exists()
+        if ann_file.exists():
+            try:
+                with open(ann_file, 'r') as f:
+                    content = f.read()
+                    if "example.jpg" in content or len(content) < 1000:
+                        print(f"🗑️  Old template detected for {split}.json, overwriting...")
+                        should_download = True
+            except Exception:
+                should_download = True
+
+        if should_download:
             print(f"Downloading {split}.json...")
             try:
                 subprocess.run(['curl', '-L', url, '-o', str(ann_file)], check=True)
@@ -119,7 +134,7 @@ def setup_flickr30k(output_dir: Path):
                 print(f"Failed to download {split}.json: {e}")
                 print(f"Please manually download from {url}")
         else:
-            print(f"✓ {split}.json already exists")
+            print(f"✓ {split}.json already exists and appears valid")
     
     print(f"\n✓ Flickr30k setup complete: {flickr_dir}")
     return True
