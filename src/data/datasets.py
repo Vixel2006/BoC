@@ -63,12 +63,22 @@ class Flickr30kDataset:
         # Create image-caption pairs (each image has 5 captions)
         self.samples = []
         for ann in self.annotations:
-            image_path = self.image_dir / ann['image_id']
-            for caption in ann['captions']:
+            # Map keys from real JSON format:
+            # "image" -> image_id (filename)
+            # "caption" -> captions list
+            image_rel_path = ann.get('image', '')
+            image_id = image_rel_path.split('/')[-1] if '/' in image_rel_path else image_rel_path
+            captions = ann.get('caption', [])
+            
+            if not image_id or not captions:
+                continue
+                
+            image_path = self.image_dir / image_id
+            for caption in captions:
                 self.samples.append({
                     'image_path': str(image_path),
                     'caption': caption,
-                    'image_id': ann['image_id']
+                    'image_id': image_id
                 })
         
         print(f"Loaded Flickr30k {config.split}: {len(self.samples)} image-caption pairs")

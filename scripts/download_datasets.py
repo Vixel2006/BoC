@@ -101,31 +101,25 @@ def setup_flickr30k(output_dir: Path):
     # For this demo, create sample annotation structure
     # In production, download from official Flickr30k Entities dataset
     
-    for split in ['train', 'val', 'test']:
+    # Download actual Flickr30k annotations from Google Cloud Storage
+    flickr_ann_urls = {
+        'train': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/flickr30k_train.json',
+        'val': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/flickr30k_val.json',
+        'test': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/flickr30k_test.json'
+    }
+    
+    print("\nDownloading Flickr30k annotations...")
+    for split, url in flickr_ann_urls.items():
         ann_file = annotations_dir / f"{split}.json"
         if not ann_file.exists():
-            print(f"Creating template for {split}.json")
-            print("⚠️  You need to populate these with actual Flickr30k captions")
-            
-            # Create template
-            template = [
-                {
-                    "image_id": "example.jpg",
-                    "captions": [
-                        "Caption 1",
-                        "Caption 2",
-                        "Caption 3",
-                        "Caption 4",
-                        "Caption 5"
-                    ]
-                }
-            ]
-            with open(ann_file, 'w') as f:
-                json.dump(template, f, indent=2)
-    
-    print("\n📝 Note: Flickr30k caption annotations available at:")
-    print("   https://github.com/BryanPlummer/flickr30k_entities")
-    print("   Download 'Sentences' and convert to our JSON format")
+            print(f"Downloading {split}.json...")
+            try:
+                subprocess.run(['curl', '-L', url, '-o', str(ann_file)], check=True)
+            except Exception as e:
+                print(f"Failed to download {split}.json: {e}")
+                print(f"Please manually download from {url}")
+        else:
+            print(f"✓ {split}.json already exists")
     
     print(f"\n✓ Flickr30k setup complete: {flickr_dir}")
     return True
