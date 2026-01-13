@@ -359,5 +359,22 @@ def verify_dataset(dataset_name: str, data_root: Path) -> bool:
     else:
         return False
     
-    return all(p.exists() for p in required_paths)
+    for path in required_paths:
+        if not path.exists():
+            print(f"❌ Missing: {path}")
+            return False
+            
+        # Check for template annotations
+        if path.suffix == '.json':
+            try:
+                with open(path, 'r') as f:
+                    content = f.read(1000)  # Just read enough to check
+                    if "example.jpg" in content or "Caption 1" in content:
+                        print(f"❌ Template detected: {path}")
+                        print("Run 'python scripts/download_datasets.py' to download the real dataset.")
+                        return False
+            except Exception:
+                pass
+                
+    return True
 

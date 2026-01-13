@@ -9,10 +9,3 @@ numpy
 pandas
 scikit-learn
 tqdm
-
-# For tokenization (optional - using simple tokenizer by default)
-# sentencepiece
-
-# For experiment tracking (optional)
-# wandb
-# tensorboard

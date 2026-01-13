@@ -17,21 +17,10 @@ import shutil
 from src.data import verify_dataset
 
 
-
-class DownloadProgressBar(tqdm):
-    """Progress bar for downloads."""
-    
-    def update_to(self, b=1, bsize=1, tsize=None):
-        if tsize is not None:
-            self.total = tsize
-        self.update(b * bsize - self.n)
-
-
 def download_url(url, output_path):
     """Download file with progress bar."""
     print(f"Downloading: {url}")
-    with DownloadProgressBar(unit='B', unit_scale=True, miniters=1, desc=output_path) as t:
-        urllib.request.urlretrieve(url, filename=output_path, reporthook=t.update_to)
+    urllib.request.urlretrieve(url, filename=output_path, reporthook=t.update_to)
 
 
 def setup_flickr30k(output_dir: Path):

@@ -330,7 +330,7 @@ graph TB
   - Text: Autoregressive transformer decoder
 
 ---
-
+<!--
 ## 📈 Experimental Results
 
 ### Flickr30k Results (Base Model)
@@ -358,6 +358,7 @@ graph TB
 *Note: Results reported on validation sets. See paper for full experimental details.*
 
 ---
+-->
 
 ## 📂 Project Structure
 
@@ -376,6 +377,7 @@ BoC/
 ```
 
 ---
+<!--
 
 ## 📝 Citation
 
@@ -432,3 +434,4 @@ For major changes, open an issue first to discuss proposed changes.
 - 🎥 [Project Page](https://yourwebsite.com/boc)
 - 💾 [Pretrained Models](https://huggingface.co/yourname/boc)
 - 📊 [Experiment Logs](https://wandb.ai/yourname/boc)
+-->
